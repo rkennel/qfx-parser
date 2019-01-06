@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter
 data class QfxFile(val headers: Map<String, String>)
 
 data class QfxServerConnectionInfo(
-    val status: QfxServerConnectionStatus,
+    val status: QfxStatus,
     val serverDate: QfxServerDate,
     val language: String,
     val bankInformation: QfxBankInformation
@@ -15,7 +15,7 @@ data class QfxServerConnectionInfo(
 
 }
 
-data class QfxServerConnectionStatus(val code: String, val severity: String, val message: String?)
+data class QfxStatus(val code: String, val severity: String, val message: String)
 
 class QfxServerDate(val dateText: String) {
     fun toLocalDate(): LocalDate {
@@ -25,6 +25,8 @@ class QfxServerDate(val dateText: String) {
 }
 
 data class QfxBankInformation(val org:String, val fid: String, val bid:String, val userId: String)
+
+data class QfxCreditCardStatement(val trnuid:String, val status:QfxStatus, val defaultCurrency: String)
 
 fun parseFile(filename: String): QfxFile {
     val fileText: String = File(filename).readText(Charsets.UTF_8)
@@ -62,12 +64,12 @@ internal fun parseServerConnectionInfo(serverConnectionStatus: String): QfxServe
     return QfxServerConnectionInfo(qfxServerConnectionStatus, qfxServerDate, language, bankInformation)
 }
 
-internal fun parseStatus(statusText: String): QfxServerConnectionStatus {
+internal fun parseStatus(statusText: String): QfxStatus {
     val code = valueAfterTag(statusText, "CODE")
     val severity = valueAfterTag(statusText, "SEVERITY")
     val message = valueAfterTag(statusText, "MESSAGE")
 
-    return QfxServerConnectionStatus(code, severity, message)
+    return QfxStatus(code, severity, message)
 }
 
 internal fun parseBankInformation(serverConnectionStatus: String): QfxBankInformation {
@@ -104,4 +106,14 @@ private fun valueAfterTag(textWithTags: String, tagName: String): String {
     val endIndex = textWithTags.indexOf("<", indexAtBeginOfTag + 1)
 
     return textWithTags.substring(beginIndex, endIndex).trim()
+}
+
+internal fun parseCreditCardStatement(creditCardStatementText: String) : QfxCreditCardStatement {
+    val trnuid = valueAfterTag(creditCardStatementText,"TRNUID")
+    val status = parseStatus(getElementAsText(creditCardStatementText,"STATUS"))
+
+    val creditCardStatementResonseText = getElementAsText(creditCardStatementText,"CCSTMTRS")
+    val defaultCurrency = valueAfterTag(creditCardStatementResonseText,"CURDEF")
+
+    return QfxCreditCardStatement(trnuid, status,defaultCurrency)
 }
