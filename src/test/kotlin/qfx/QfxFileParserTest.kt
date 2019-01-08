@@ -3,6 +3,7 @@ package qfx
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class QfxFileParserTest {
 
@@ -143,10 +144,11 @@ class QfxFileParserTest {
                             <CURDEF>USD</CURDEF>
                             <CCACCTFROM>
                                 <ACCTID>1234</ACCTID>
+                                <ACCTKEY>56</ACCTKEY>
                             </CCACCTFROM>
                             <BANKTRANLIST>
                                 <DTSTART>20170104000000.000[0:GMT]</DTSTART>
-                                <DTEND>20190101000000.000[0:GMT]</DTEND>
+                                <DTEND>20190102235959.000[0:GMT]</DTEND>
                                 <STMTTRN>
                                     <TRNTYPE>DEBIT</TRNTYPE>
                                     <DTPOSTED>20181231000000.000[0:GMT]</DTPOSTED>
@@ -155,6 +157,17 @@ class QfxFileParserTest {
                                     <FITID>01950000000000258712606920181230</FITID>
                                     <CORRECTFITID>0195${'$'}05410198364795015738651${'$'}20181231${'$'}${'$'}9.96${'$'}2587126069</CORRECTFITID>
                                     <REFNUM>05410198364795015738651</REFNUM>
+                                    <NAME>00006346 ANN ARBOR MI</NAME>
+                                    <SIC>5310</SIC>
+                                </STMTTRN>
+                                <STMTTRN>
+                                    <TRNTYPE>CREDIT</TRNTYPE>
+                                    <DTPOSTED>20181231000000.000[0:GMT]</DTPOSTED>
+                                    <DTUSER>20181230000000.000[0:GMT]</DTUSER>
+                                    <TRNAMT>27.3400</TRNAMT>
+                                    <FITID>01950000000000258712606920181231</FITID>
+                                    <CORRECTFITID>0195${'$'}05410198364795015738651${'$'}20181231${'$'}${'$'}9.96${'$'}2587126069</CORRECTFITID>
+                                    <REFNUM>05410198364795015738652</REFNUM>
                                     <NAME>00006346 ANN ARBOR MI</NAME>
                                     <SIC>5310</SIC>
                                 </STMTTRN>
@@ -177,6 +190,13 @@ class QfxFileParserTest {
         assertThat(creditCardStatement.trnuid).isEqualTo("0")
         assertThat(creditCardStatement.status).isEqualTo(QfxStatus("0","INFO",""))
         assertThat(creditCardStatement.defaultCurrency).isEqualTo("USD")
+        assertThat(creditCardStatement.accountId).isEqualTo("1234")
+        assertThat(creditCardStatement.accountKey).isEqualTo("56")
+        assertThat(creditCardStatement.beginDate).isEqualTo(LocalDateTime.of(2017,1,4,0,0,0))
+        assertThat(creditCardStatement.endDate).isEqualTo(LocalDateTime.of(2019,1,2,23,59,59))
+        assertThat(creditCardStatement.transactions.size).isEqualTo(2)
+        assertThat(creditCardStatement.transactions[0].type).isEqualTo("DEBIT")
+        assertThat(creditCardStatement.transactions[1].type).isEqualTo("CREDIT")
     }
 
 }
